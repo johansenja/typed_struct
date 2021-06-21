@@ -17,14 +17,19 @@ class TypedStruct < Struct
 
         klass.instance_eval do
           @options = { types: properties }
+
+          define_method :[]= do |key, val|
+            prop = properties[key]
+            unless val_is_type? val, prop
+              raise "Unexpected type #{val.class} for #{key.inspect} (expected #{prop})"
+            end
+
+            super key, val
+          end
+
           properties.each_key do |k|
             define_method :"#{k}=" do |val|
-              prop = properties[k]
-              if val_is_type? val, prop
-                raise "Unexpected type #{val.class} for #{k.inspect} (expected #{prop})"
-              end
-              # it seems that structs behave in such a way that you can't call super here, but it
-              # will still set the value anyway
+              self[k] = val
             end
           end
         end
