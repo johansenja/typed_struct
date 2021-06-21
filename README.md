@@ -1,8 +1,33 @@
 # TypedStruct
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/typed_struct`. To experiment with that code, run `bin/console` for an interactive prompt.
+A Typed Struct is a lightweight data structure inspired by [Dry Struct](https://github.com/dry-rb/dry-struct), which allows for reading and writing properties while making use of a flexible and powerful type checking system, which also incorporates Ruby's [RBS](https://github.com/ruby/rbs/) for type definitions. 
 
-TODO: Delete this and the text above, and describe your gem
+## Example
+
+```ruby
+require 'typed_struct' # unless using rails
+
+User = TypedStruct.new name: String, # an instance of String
+                       age: Integer, # an instance of Integer
+                       type: "User", # must by a string with value "User"
+                       interests: Rbs("Array[String]"), # an RBS generic type (an Array of Strings)
+                       preferences: Rbs("{ opt_out_of_emails: bool, additional: untyped }") # RBS record type
+
+clive = User.new name: "Clive",
+                 age: 22,
+                 interests: %w[surfing skiing],
+                 preferences: { opt_out_of_emails: true, additional: { preferred_theme: :dark } },
+                 type: "User"
+
+clive.age # 22
+clive.age = '22' # => Error
+clive.preferences = { "opt_out_of_emails" => true, "additional" => nil } # error - type mismatch, not Symbol keys
+clive.freeze # no more changes can be made
+```
+
+Note that a `TypedStruct` inherits from `Struct` directly, so anything from `Struct` is also available in `TypedStruct` - see [Struct docs](https://ruby-doc.org/core-3.0.1/Struct.html) for more info.
+
+**See [RBS reference](https://github.com/ruby/rbs/blob/3c046c77c3006211a1a14eedc35221ac4198f788/docs/syntax.md) for my info on writing RBS types**
 
 ## Installation
 
@@ -19,10 +44,6 @@ And then execute:
 Or install it yourself as:
 
     $ gem install typed_struct
-
-## Usage
-
-TODO: Write usage instructions here
 
 ## Development
 
