@@ -27,7 +27,7 @@ clive.freeze # no more changes can be made
 
 Note that a `TypedStruct` inherits from `Struct` directly, so anything from `Struct` is also available in `TypedStruct` - see [Struct docs](https://ruby-doc.org/core-3.0.1/Struct.html) for more info.
 
-**See [RBS reference](https://github.com/ruby/rbs/blob/3c046c77c3006211a1a14eedc35221ac4198f788/docs/syntax.md) for my info on writing RBS types**
+**See [RBS reference](https://github.com/ruby/rbs/blob/3c046c77c3006211a1a14eedc35221ac4198f788/docs/syntax.md) for more info on writing RBS types**
 
 ## Installation
 
@@ -53,7 +53,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/typed_struct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/johansenja/typed_struct.
 
 ## License
 
