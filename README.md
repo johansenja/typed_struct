@@ -9,6 +9,8 @@ require 'typed_struct' # unless using rails
 
 User = TypedStruct.new name: String, # an instance of String
                        age: Integer, # an instance of Integer
+                       username: /\w{4,}/, # must match given Regexp
+                       rating: (0..5), # must be value from 0 to 5
                        type: "User", # must by a string with value "User"
                        interests: Rbs("Array[String]"), # an RBS generic type (an Array of Strings)
                        preferences: Rbs("{ opt_out_of_emails: bool, additional: untyped }") # RBS record type
@@ -17,7 +19,9 @@ clive = User.new name: "Clive",
                  age: 22,
                  interests: %w[surfing skiing],
                  preferences: { opt_out_of_emails: true, additional: { preferred_theme: :dark } },
-                 type: "User"
+                 type: "User",
+                 rating: 4,
+                 username: "cliveabc"
 
 clive.age # 22
 clive.age = '22' # => Error
