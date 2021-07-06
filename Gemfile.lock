@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    typed_struct (0.1.1)
+    typed_struct (0.1.2)
       rbs (~> 1.0)
 
 GEM
@@ -9,7 +9,7 @@ GEM
   specs:
     diff-lcs (1.4.4)
     rake (13.0.3)
-    rbs (1.1.1)
+    rbs (1.2.1)
     rspec (3.10.0)
       rspec-core (~> 3.10.0)
       rspec-expectations (~> 3.10.0)
