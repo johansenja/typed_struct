@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    typed_struct (0.1.3)
+    typed_struct (0.1.4)
       rbs (~> 1.0)
 
 GEM

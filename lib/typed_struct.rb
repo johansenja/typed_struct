@@ -17,8 +17,6 @@ class TypedStruct < Struct
   # any methods which are able to be overridden
   alias_method :__class__, :class
 
-  Options = nil
-
   class << self
     def new(opts = Options.new, **properties)
       properties.each_key do |prop|
