@@ -4,6 +4,10 @@ require_relative "typed_struct/version"
 require_relative "typed_struct/type_checking"
 require "rbs"
 
+def Rbs(type_str)
+  RBS::Parser.parse_type(type_str)
+end
+
 class TypedStruct < Struct
   include TypeChecking
 
@@ -13,8 +17,10 @@ class TypedStruct < Struct
   # any methods which are able to be overridden
   alias_method :__class__, :class
 
+  Options = nil
+
   class << self
-    def new(**properties)
+    def new(opts = Options.new, **properties)
       properties.each_key do |prop|
         if method_defined?(prop)
           $stdout.puts OVERRIDING_NATIVE_METHOD_MSG % [prop.inspect, caller(3).first]
@@ -28,7 +34,7 @@ class TypedStruct < Struct
         end
 
         klass.instance_eval do
-          @options = { types: properties }
+          @options = { types: properties, options: opts }
 
           define_method :[]= do |key, val|
             prop = properties[key]
@@ -51,17 +57,16 @@ class TypedStruct < Struct
 
   def initialize(**attrs)
     opts = self.__class__.options
-    opts[:types].each do |prop, expected_type|
-      passed_value = attrs[prop]
-      next if val_is_type? passed_value, expected_type
-
-      raise "Unexpected type #{passed_value.class} for #{prop.inspect} (expected #{expected_type})"
+    vals = opts[:types].to_h do |prop, expected_type|
+      value = attrs.fetch(prop, opts[:options][:default])
+      unless val_is_type? value, expected_type
+        raise "Unexpected type #{value.class} for #{prop.inspect} (expected #{expected_type})"
+      end
+      [prop, value]
     end
 
-    super
+    super **vals
   end
-end
 
-def Rbs(type_str)
-  RBS::Parser.parse_type(type_str)
+  Options = TypedStruct.new({ default: nil }, default: Rbs("untyped"))
 end
