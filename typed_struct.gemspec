@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = "All the flexibility of a Ruby Struct, but with type checking on its properties. Also benefit from being able to define complex types using RBS type notation."
   spec.homepage      = "https://github.com/johansenja/typed_struct"
   spec.license       = "MIT"
-  spec.required_ruby_version = Gem::Requirement.new(">= 2.4.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 2.6.0")
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
