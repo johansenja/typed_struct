@@ -18,9 +18,23 @@ class TypedStruct < Struct
   alias_method :__class__, :class
 
   class << self
+    @@default_keyword_init = nil
+
+    def default_keyword_init
+      @@default_keyword_init
+    end
+
+    def default_keyword_init=(default)
+      @@default_keyword_init = default
+    end
+
     def new(opts = Options.new, **properties)
-      if const_defined?("RSpec") && RUBY_VERSION < "3.2" && opts[:keyword_init].nil?
-        opts[:keyword_init] = false
+      if opts[:keyword_init].nil?
+        opts[:keyword_init] = if RUBY_VERSION < "3.2"
+          default_keyword_init || false
+        else
+          default_keyword_init
+        end
       end
 
       properties.each_key do |prop|

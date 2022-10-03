@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 RSpec.describe TypedStruct do
+  before do
+    expect(TypedStruct.class_variables).to contain_exactly :@@default_keyword_init
+    TypedStruct.default_keyword_init = nil
+  end
+
   it "helps avoid primitive obsession" do
     Price = TypedStruct.new(price: Rational) do
       %i[- + / *].each do |op|
@@ -28,6 +33,31 @@ RSpec.describe TypedStruct do
     expect { y.int = "abc" }.to raise_error TypeError
   end
 
+  it "has default_keyword_init option" do
+    attrs = RUBY_VERSION < "3.2" ?  {int: {int: 5}} : {int: 5}
+
+    TypedStruct.default_keyword_init = nil
+    expect(TypedStruct.default_keyword_init).to be nil
+    x = Struct.new(:int)
+    y = TypedStruct.new(int: Rbs("untyped"))
+    expect(x.new(int: 5)).to have_attributes attrs
+    expect(y.new(int: 5)).to have_attributes attrs
+
+    TypedStruct.default_keyword_init = true
+    expect(TypedStruct.default_keyword_init).to be true
+    x = Struct.new(:int, keyword_init: true)
+    y = TypedStruct.new(int: Rbs("untyped"))
+    expect(x.new(int: 5)).to have_attributes int: 5
+    expect(y.new(int: 5)).to have_attributes int: 5
+
+    TypedStruct.default_keyword_init = false
+    expect(TypedStruct.default_keyword_init).to be false
+    x = Struct.new(:int, keyword_init: false)
+    y = TypedStruct.new(int: Rbs("untyped"))
+    expect(x.new(int: 5)).to have_attributes int: {int: 5}
+    expect(y.new(int: 5)).to have_attributes int: {int: 5}
+  end
+
   it "has an options attribute" do
     x = TypedStruct.new(int: Integer, str: String)
     expect(x.instance_variables).to contain_exactly :@options
@@ -45,13 +75,11 @@ RSpec.describe TypedStruct do
       y = TypedStruct.new(int: Rbs("untyped"))
       attrs = RUBY_VERSION < "3.2" ?  {int: {int: 5}} : {int: 5}
       expect(x.new(5)).to have_attributes int: 5
-      expect(x.new(int: 5)).to have_attributes attrs
       expect(y.new(5)).to have_attributes int: 5
+      expect(x.new(int: 5)).to have_attributes attrs
       expect(y.new(int: 5)).to have_attributes attrs
       x = Struct.new(:int, keyword_init: true)
       y = TypedStruct.new({ keyword_init: true }, int: Rbs("untyped"))
-      expect { x.new(5) }.to raise_error ArgumentError, "wrong number of arguments (given 1, expected 0)"
-      expect { y.new(5) }.to raise_error ArgumentError, "wrong number of arguments (given 1, expected 0)"
       expect(x.new(int: 5)).to have_attributes int: 5
       expect(y.new(int: 5)).to have_attributes int: 5
     end
@@ -71,14 +99,16 @@ RSpec.describe TypedStruct do
 
     it "has identical error messages for presence checks" do
       x = Struct.new(:int, keyword_init: true)
-      expect { x.new(str: 5, abc: "xyz") }.to raise_error ArgumentError, "unknown keywords: str, abc"
       y = TypedStruct.new({ keyword_init: true }, int: Integer)
+      expect { x.new(5) }.to raise_error ArgumentError, "wrong number of arguments (given 1, expected 0)"
+      expect { y.new(5) }.to raise_error ArgumentError, "wrong number of arguments (given 1, expected 0)"
+      expect { x.new(str: 5, abc: "xyz") }.to raise_error ArgumentError, "unknown keywords: str, abc"
       expect { y.new(str: 5, abc: "xyz") }.to raise_error ArgumentError, "unknown keywords: str, abc"
       a = x.new(int: 5)
-      expect { a.str = 5 }.to raise_error NoMethodError, "undefined method `str=' for #<struct int=5>"
-      expect { a[:str] = 5 }.to raise_error NameError, "no member 'str' in struct"
       b = y.new(int: 5)
+      expect { a.str = 5 }.to raise_error NoMethodError, "undefined method `str=' for #<struct int=5>"
       expect { b.str = 5 }.to raise_error NoMethodError, "undefined method `str=' for #<struct int=5>"
+      expect { a[:str] = 5 }.to raise_error NameError, "no member 'str' in struct"
       expect { b[:str] = 5 }.to raise_error NameError, "no member 'str' in struct"
       x = Struct.new(:int)
       y = TypedStruct.new(int: Integer)
@@ -89,7 +119,7 @@ RSpec.describe TypedStruct do
     it "supports the same methods" do
       a = Struct.new(:str, :int)
       b = TypedStruct.new(str: String, int: Integer)
-      expect(a.public_methods).to contain_exactly *b.public_methods
+      expect(a.public_methods).to contain_exactly *b.public_methods.grep_v(:default_keyword_init).grep_v(:default_keyword_init=)
       expect(a.public_instance_methods).to contain_exactly *b.public_instance_methods.grep_v(:__class__)
       expect(a.public_instance_methods(false)).to contain_exactly *b.new("abc", 5).public_methods(false).grep_v(:[]=)
     end
@@ -224,6 +254,7 @@ RSpec.describe TypedStruct do
       end
     end
   end
+
   context "when overriding native methods" do
     before { $stderr = StringIO.new }
 
@@ -297,9 +328,9 @@ RSpec.describe TypedStruct do
   context "when keyword_init is false" do
     it "treats keyword arguments as if they were positional arguments" do
       x = Struct.new(:int, :str, keyword_init: false)
+      y = TypedStruct.new({ keyword_init: false }, int: Rbs("untyped"), str: Rbs("untyped"))
       expect(x.new(int: 5, str: "abc")).to have_attributes int: {int: 5, str: "abc"}, str: nil
-      x = TypedStruct.new({ keyword_init: false }, int: Rbs("untyped"), str: Rbs("untyped"))
-      expect(x.new(int: 5, str: "abc")).to have_attributes int: {int: 5, str: "abc"}, str: nil
+      expect(y.new(int: 5, str: "abc")).to have_attributes int: {int: 5, str: "abc"}, str: nil
     end
 
     it "can be used to avoid unnecessary repetition" do
